@@ -41,3 +41,6 @@ jspm_packages
 
 # Serverless Framework deployment artifacts
 .serverless
+
+# IntelliJ
+.idea
