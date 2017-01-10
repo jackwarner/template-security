@@ -4,7 +4,7 @@ phases:
   install:
     commands:
       # DO NOT MODIFY!!!
-      - npm install -g https://github.com/serverless/serverless 2>&1 >/dev/null
+      - npm install -g serverless@1.5.0 2>&1 >/dev/null
 
   build:
     commands:
