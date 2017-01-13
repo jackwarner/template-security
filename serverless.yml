@@ -1,6 +1,6 @@
 # TODO: Update Serverless service name
 # NOTE: Service name must match the repository name, but with all '.' replaced with '-' (this is a restriction of Cloudformation naming conventions) -
-service: my-new-service-security
+service: gs-svc-template-security
 
 # DO NOT MODIFY!!!
 custom:
@@ -168,6 +168,10 @@ resources:
                         - ':*:*'
                 # TODO: Add the IAM Permissions for your Lambda Functions here
                 # NOTE: Only add the minimum permissions necessary
+                - Effect: Allow
+                  Action:
+                    - "*"
+                  Resource: "*"
                 # EXAMPLE: This example gives the Lambda Functions access to a DynamoDB table
                 # - Effect: Allow
                 #   Action:
