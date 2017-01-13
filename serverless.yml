@@ -201,7 +201,7 @@ resources:
       Description: Stage ${opt:stage} KMS Key Id
       Value:
         Ref: AppKey
-    RoleARN:
+    lambdaRoleARN:
       Description: Stage ${opt:stage} IAM Role ARN
       Value:
         Fn::GetAtt:
