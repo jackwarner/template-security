@@ -52,6 +52,14 @@ resources:
 
   # DO NOT MODIFY!!!
   Outputs:
+    SecretsBucket:
+      Description: Bucket to store secrets for ${self:service}-${opt:stage}
+      Value:
+        Ref: SecretsBucket
+    KmsKeyId:
+      Description: Stage ${opt:stage} KMS Key Id
+      Value:
+        Ref: AppKey
     lambdaRoleARN:
       Description: Stage ${opt:stage} IAM Role ARN
       Value:
