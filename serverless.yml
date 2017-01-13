@@ -52,7 +52,7 @@ resources:
 
   # DO NOT MODIFY!!!
   Outputs:
-    RoleARN:
+    lambdaRoleARN:
       Description: Stage ${opt:stage} IAM Role ARN
       Value:
         Fn::GetAtt:
