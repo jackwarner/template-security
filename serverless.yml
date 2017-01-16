@@ -45,7 +45,7 @@ resources:
             Action:
               - kms:*
             Resource: '*'
-          - Sid: ${opt:serviceName} ${opt:stage} Allow Key usage to Lambda Execution Role
+          - Sid: ${self:custom.source.ServiceName} ${opt:stage} Allow Key usage to Lambda Execution Role
             Effect: Allow
             Principal:
               AWS:
