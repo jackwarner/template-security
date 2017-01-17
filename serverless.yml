@@ -9,7 +9,7 @@ provider:
   name: aws
   runtime: nodejs4.3
 
-resources:
+resources:  
   Resources:
     Role:
       Type: AWS::IAM::Role
