@@ -1,13 +1,10 @@
-# TODO: Update Serverless service name
 # NOTE: Service name must match the repository name, but with all '.' replaced with '-' (this is a restriction of Cloudformation naming conventions) -
 service: gs-svc-template-security
 
-# DO NOT MODIFY!!!
 custom:
   source:
     ServiceName: ${opt:serviceName}
 
-# DO NOT MODIFY!!!
 provider:
   name: aws
   runtime: nodejs4.3
@@ -44,6 +41,7 @@ resources:
                       - - 'arn:aws:logs:'
                         - Ref: AWS::Region
                         - ':*:*'
+                # TODO: If needed, add IAM Policies to the Lambda Function Roles
                 # NOTE: Only add the minimum permissions necessary
                 - Effect: Allow
                   Action:
