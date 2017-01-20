@@ -54,6 +54,18 @@ resources:
               - kms:GenerateDataKey*
               - kms:DescribeKey
             Resource: '*'
+          - Sid: ${self:custom.source.ServiceName} ${opt:stage} Allow CodeBuild app role usage to Lambda Execution Role
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::ImportValue: codebuild-arn-${self:service}-app
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
 
     # DO NOT MODIFY!!!
     SecretsBucket:
@@ -123,6 +135,22 @@ resources:
             Principal:
               AWS:
                 Fn::GetAtt: [ Role, Arn ]
+            Resource:
+              Fn::Join:
+                - ''
+                - - 'arn:aws:s3:::'
+                  - Ref: SecretsBucket
+                  - '/*'
+            Condition:
+               Bool:
+                 aws:SecureTransport: true
+          - Sid: Allow CodeBuild app execution role to download and decrypt secrets
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            Principal:
+              AWS:
+                Fn::ImportValue: codebuild-arn-${self:service}-app
             Resource:
               Fn::Join:
                 - ''
