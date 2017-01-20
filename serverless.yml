@@ -193,10 +193,6 @@ resources:
                         - ':*:*'
                 # TODO: If needed, add IAM Policies to the Lambda Function Roles
                 # NOTE: Only add the minimum permissions necessary
-                - Effect: Allow
-                  Action:
-                    - "*"
-                  Resource: "*"
                 # EXAMPLE: This example gives the Lambda Functions access to a DynamoDB table
                 # - Effect: Allow
                 #   Action:
