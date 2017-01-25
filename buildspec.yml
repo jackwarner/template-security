@@ -7,7 +7,8 @@ phases:
       - npm install -g serverless@1.5.0 2>&1 >/dev/null
   build:
     commands:
-      # NOTE: Should exactly match the name of your repository, and use a delimiter of '.' not '-'
+      # NOTE: Should exactly match the name of your app (not security!) repository, and use a delimiter of '.' not '-'
+      # For example, gs.svc.avatar.security would be 'gs-svc-avatar'
       - SLS_DEBUG=true sls deploy --stage $STAGE --serviceName gs.svc.template
   post_build:
     commands:
