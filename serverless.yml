@@ -222,6 +222,8 @@ resources:
       Description: Bucket to store secrets for ${self:service}-${opt:stage}
       Value:
         Ref: SecretsBucket
+      Export:
+        Name: ${self:service}-secrets-${opt:stage}
     KmsKeyId:
       Description: Stage ${opt:stage} KMS Key Id
       Value:
