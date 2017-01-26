@@ -146,22 +146,24 @@ resources:
             Condition:
                Bool:
                  aws:SecureTransport: true
-          - Sid: Allow CodeBuild app execution role to download and decrypt secrets
-            Effect: Allow
-            Action:
-            - s3:GetObject
-            Principal:
-              AWS:
-                Fn::ImportValue: codebuild-arn-${self:service}-app
-            Resource:
-              Fn::Join:
-                - ''
-                - - 'arn:aws:s3:::'
-                  - Ref: SecretsBucket
-                  - '/*'
-            Condition:
-               Bool:
-                 aws:SecureTransport: true
+# TODO: If you need to access secrets stored in SecretsBucket from within your buildspec.yml, you need to allow the CodeBuild app role access to KMS
+# TODO: If you only need to use secrets at runtime, allowing the Lambda Execution Role to have access is enough
+#          - Sid: Allow CodeBuild app execution role to download and decrypt secrets
+#            Effect: Allow
+#            Action:
+#            - s3:GetObject
+#            Principal:
+#              AWS:
+#                Fn::ImportValue: codebuild-arn-${self:service}-app
+#            Resource:
+#              Fn::Join:
+#                - ''
+#                - - 'arn:aws:s3:::'
+#                  - Ref: SecretsBucket
+#                  - '/*'
+#            Condition:
+#               Bool:
+#                 aws:SecureTransport: true
 
     Role:
       Type: AWS::IAM::Role

@@ -8,7 +8,7 @@ phases:
   build:
     commands:
       # NOTE: Should exactly match the name of your app (not security!) repository, and use a delimiter of '.' not '-'
-      # For example, gs.svc.avatar.security would be 'gs-svc-avatar'
+      # For example, gs.svc.avatar.security would be 'gs.svc.avatar'
       - SLS_DEBUG=true sls deploy --stage $STAGE --serviceName gs.svc.template
   post_build:
     commands:
