@@ -42,7 +42,7 @@ resources:
             Action:
               - kms:*
             Resource: '*'
-          - Sid: ${self:custom.source.ServiceName} ${opt:stage} Allow Key usage to Lambda Execution Role
+          - Sid: ${self:custom.source.ServiceName} ${env:STAGE} Allow Key usage to Lambda Execution Role
             Effect: Allow
             Principal:
               AWS:
@@ -56,7 +56,7 @@ resources:
             Resource: '*'
 # TODO: If you need to access secrets stored in SecretsBucket from within your buildspec.yml, you need to allow the CodeBuild app role access to KMS
 # TODO: If you only need to use secrets at runtime, allowing the Lambda Execution Role to have access is enough
-#          - Sid: ${self:custom.source.ServiceName} ${opt:stage} Allow CodeBuild app role usage to Lambda Execution Role
+#          - Sid: ${self:custom.source.ServiceName} ${env:STAGE} Allow CodeBuild app role usage to Lambda Execution Role
 #            Effect: Allow
 #            Principal:
 #              AWS:
@@ -79,7 +79,7 @@ resources:
           DestinationBucketName:
             Fn::ImportValue:
               AppSecretLoggingBucket
-          LogFilePrefix: logs-${self:service}-${opt:stage}
+          LogFilePrefix: logs-${self:service}-${env:STAGE}
 
     # DO NOT MODIFY!!!
     SecretsBucketPolicy:
@@ -179,7 +179,7 @@ resources:
                 - sts:AssumeRole
         Path: "/"
         Policies:
-          - PolicyName: ${self:custom.source.ServiceName}.security.${opt:stage}
+          - PolicyName: ${self:custom.source.ServiceName}.security.${env:STAGE}
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -214,26 +214,26 @@ resources:
                 #       - ":table/"
                 #       - ${self:custom.source.ServiceName}
                 #       - "."
-                #       - ${opt:stage}
+                #       - ${env:STAGE}
 
   # DO NOT MODIFY!!!
   Outputs:
     SecretsBucket:
-      Description: Bucket to store secrets for ${self:service}-${opt:stage}
+      Description: Bucket to store secrets for ${self:service}-${env:STAGE}
       Value:
         Ref: SecretsBucket
       Export:
-        Name: ${self:service}-secrets-${opt:stage}
+        Name: ${self:service}-secrets-${env:STAGE}
     KmsKeyId:
-      Description: Stage ${opt:stage} KMS Key Id
+      Description: Stage ${env:STAGE} KMS Key Id
       Value:
         Ref: AppKey
     lambdaRoleARN:
-      Description: Stage ${opt:stage} IAM Role ARN
+      Description: Stage ${env:STAGE} IAM Role ARN
       Value:
         Fn::GetAtt:
           - Role
           - Arn
       Export:
-        Name: ${self:service}-${opt:stage}
+        Name: ${self:service}-${env:STAGE}
 

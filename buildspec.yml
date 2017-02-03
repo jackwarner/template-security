@@ -9,7 +9,7 @@ phases:
     commands:
       # NOTE: Should exactly match the name of your app (not security!) repository, and use a delimiter of '.' not '-'
       # For example, gs.svc.avatar.security would be 'gs.svc.avatar'
-      - sls deploy --stage $STAGE --serviceName gs.svc.template
+      - sls deploy --serviceName gs.svc.template
   post_build:
     commands:
       # Remove pipelines
