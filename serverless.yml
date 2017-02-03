@@ -7,6 +7,7 @@ custom:
 
 provider:
   name: aws
+  stage: ${env:STAGE}
   runtime: nodejs4.3
 
 resources:  
