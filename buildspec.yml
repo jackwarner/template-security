@@ -7,12 +7,11 @@ phases:
       - npm install -g serverless 2>&1 >/dev/null
   build:
     commands:
-      # NOTE: Should exactly match the name of your app (not security!) repository, and use a delimiter of '.' not '-'
-      # For example, gs.svc.avatar.security would be 'gs.svc.avatar'
-      - sls deploy --serviceName gs.svc.template
+      # Deploy Security
+      - serverless deploy
   post_build:
     commands:
       # Remove pipelines
       # USE WITH EXTREME CAUTION!
       # Read and understand https://gamestop.atlassian.net/wiki/x/R4CAAw before proceeding:
-      #- sls remove --serviceName my.new.service --region us-east-1
+      #- serverless remove

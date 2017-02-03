@@ -1,10 +1,6 @@
 # NOTE: Service name must match the repository name, but with all '.' replaced with '-' (this is a restriction of Cloudformation naming conventions) -
 service: gs-svc-template-security
 
-custom:
-  source:
-    ServiceName: ${opt:serviceName}
-
 provider:
   name: aws
   stage: ${env:STAGE}
@@ -43,7 +39,7 @@ resources:
             Action:
               - kms:*
             Resource: '*'
-          - Sid: ${self:custom.source.ServiceName} ${env:STAGE} Allow Key usage to Lambda Execution Role
+          - Sid: ${env:PIPELINE} ${env:STAGE} Allow Key usage to Lambda Execution Role
             Effect: Allow
             Principal:
               AWS:
@@ -57,7 +53,7 @@ resources:
             Resource: '*'
 # TODO: If you need to access secrets stored in SecretsBucket from within your buildspec.yml, you need to allow the CodeBuild app role access to KMS
 # TODO: If you only need to use secrets at runtime, allowing the Lambda Execution Role to have access is enough
-#          - Sid: ${self:custom.source.ServiceName} ${env:STAGE} Allow CodeBuild app role usage to Lambda Execution Role
+#          - Sid: ${env:PIPELINE} ${env:STAGE} Allow CodeBuild app role usage to Lambda Execution Role
 #            Effect: Allow
 #            Principal:
 #              AWS:
@@ -180,7 +176,7 @@ resources:
                 - sts:AssumeRole
         Path: "/"
         Policies:
-          - PolicyName: ${self:custom.source.ServiceName}.security.${env:STAGE}
+          - PolicyName: ${env:PIPELINE}.security.${env:STAGE}
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -213,7 +209,7 @@ resources:
                 #       - ":"
                 #       - Ref: AWS::AccountId
                 #       - ":table/"
-                #       - ${self:custom.source.ServiceName}
+                #       - ${env:PIPELINE}
                 #       - "."
                 #       - ${env:STAGE}
 
