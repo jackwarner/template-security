@@ -15,4 +15,4 @@ phases:
       # Remove pipelines
       # USE WITH EXTREME CAUTION!
       # Read and understand https://gamestop.atlassian.net/wiki/x/R4CAAw before proceeding:
-      #- sls remove --stage $STAGE --serviceName my.new.service --region us-east-1
+      #- sls remove --serviceName my.new.service --region us-east-1
