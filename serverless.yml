@@ -1,9 +1,8 @@
-# NOTE: Service name must match the repository name, but with all '.' replaced with '-' (this is a restriction of Cloudformation naming conventions) -
-service: gs-svc-template-security
+service: template-security
 
 provider:
   name: aws
-  stage: ${env:STAGE}
+  stage: ${opt:stage, env:STAGE}
   runtime: nodejs4.3
 
 resources:  
@@ -19,7 +18,7 @@ resources:
         KeyPolicy:
           Version: '2012-10-17'
           Statement:
-          - Sid: Allow administration of the key by GS-FullAdmin
+          - Sid: Allow administration of the key by AdminRole
             Effect: Allow
             Principal:
               AWS:
@@ -27,11 +26,11 @@ resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - Ref: AWS::AccountId
-                    - ':role/GS-FullAdmin'
+                    - ':role/AdminRole'
             Action:
               - kms:*
             Resource: '*'
-          - Sid: Allow admin by CodeBuild service role defined in gs.aws.pipelines security directory
+          - Sid: Allow admin by CodeBuild service role defined in child-pipelines security directory
             Effect: Allow
             Principal:
               AWS:
@@ -39,7 +38,7 @@ resources:
             Action:
               - kms:*
             Resource: '*'
-          - Sid: ${env:PIPELINE} ${env:STAGE} Allow Key usage to Lambda Execution Role
+          - Sid: ${env:PIPELINE} ${opt:stage, env:STAGE} Allow Key usage to Lambda Execution Role
             Effect: Allow
             Principal:
               AWS:
@@ -76,7 +75,7 @@ resources:
           DestinationBucketName:
             Fn::ImportValue:
               AppSecretLoggingBucket
-          LogFilePrefix: logs-${self:service}-${env:STAGE}
+          LogFilePrefix: logs-${self:service}-${opt:stage, env:STAGE}
 
     # DO NOT MODIFY!!!
     SecretsBucketPolicy:
@@ -98,7 +97,7 @@ resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - Ref: AWS::AccountId
-                    - ':role/GS-FullAdmin'
+                    - ':role/AdminRole'
             Resource:
               Fn::Join:
                 - ''
@@ -176,7 +175,7 @@ resources:
                 - sts:AssumeRole
         Path: "/"
         Policies:
-          - PolicyName: ${env:PIPELINE}.security.${env:STAGE}
+          - PolicyName: ${env:PIPELINE}-security-${opt:stage, env:STAGE}
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -210,27 +209,27 @@ resources:
                 #       - Ref: AWS::AccountId
                 #       - ":table/"
                 #       - ${env:PIPELINE}
-                #       - "."
-                #       - ${env:STAGE}
+                #       - "-"
+                #       - ${opt:stage, env:STAGE}
 
   # DO NOT MODIFY!!!
   Outputs:
     SecretsBucket:
-      Description: Bucket to store secrets for ${self:service}-${env:STAGE}
+      Description: Bucket to store secrets for ${self:service}-${opt:stage, env:STAGE}
       Value:
         Ref: SecretsBucket
       Export:
-        Name: ${self:service}-secrets-${env:STAGE}
+        Name: ${self:service}-secrets-${opt:stage, env:STAGE}
     KmsKeyId:
-      Description: Stage ${env:STAGE} KMS Key Id
+      Description: Stage ${opt:stage, env:STAGE} KMS Key Id
       Value:
         Ref: AppKey
     lambdaRoleARN:
-      Description: Stage ${env:STAGE} IAM Role ARN
+      Description: Stage ${opt:stage, env:STAGE} IAM Role ARN
       Value:
         Fn::GetAtt:
           - Role
           - Arn
       Export:
-        Name: ${self:service}-${env:STAGE}
+        Name: ${self:service}-${opt:stage, env:STAGE}
 
