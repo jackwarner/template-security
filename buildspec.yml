@@ -12,4 +12,5 @@ phases:
     commands:
       # Remove pipelines
       # USE WITH EXTREME CAUTION!
+      # Read and understand https://pariveda.atlassian.net/wiki/x/OMLbBQ before proceeding
       #- serverless remove
