@@ -1,5 +1,5 @@
 # NOTE: Service name must match the repository name, but with all '.' replaced with '-' (this is a restriction of Cloudformation naming conventions) -
-service: gs-svc-brett-security
+service: gs-svc-template-security
 
 custom:
   source:
