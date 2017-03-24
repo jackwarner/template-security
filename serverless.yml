@@ -1,4 +1,4 @@
-service: template-security
+service: brett-security
 
 provider:
   name: aws
