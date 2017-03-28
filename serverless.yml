@@ -2,16 +2,19 @@ service: template-security
 
 provider:
   name: aws
-  stage: ${opt:stage, env:STAGE}
   runtime: nodejs4.3
   region: ${env:AWS_REGION}
+  stage: ${opt:stage, env:STAGE}
+  stackTags:
+    Type: service-security
 
-resources:  
+resources:
   Resources:
-    # DO NOT MODIFY!!!
     AppKey:
       Type: AWS::KMS::Key
-      DependsOn: Role
+      DependsOn:
+      - Role
+      - KeyUploadGroup
       Properties:
         Description: 'Key used to encrypt secrets for this stage'
         Enabled: true
@@ -19,7 +22,7 @@ resources:
         KeyPolicy:
           Version: '2012-10-17'
           Statement:
-          - Sid: Allow administration of the key by AdminRole
+          - Sid: Allow administration of the key by root
             Effect: Allow
             Principal:
               AWS:
@@ -27,19 +30,19 @@ resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - Ref: AWS::AccountId
-                    - ':role/AdminRole'
+                    - ':root'
             Action:
               - kms:*
             Resource: '*'
-          - Sid: Allow admin by CodeBuild service role defined in child-pipelines security directory
+          - Sid: Allow admin by CodeBuild service role defined in pipelines security directory
             Effect: Allow
             Principal:
               AWS:
-                Fn::ImportValue: codebuild-arn-${self:service}
+                Fn::ImportValue: codebuild-arn-${self:service}-${self:provider.stage}
             Action:
               - kms:*
             Resource: '*'
-          - Sid: ${env:PIPELINE} ${opt:stage, env:STAGE} Allow Key usage to Lambda Execution Role
+          - Sid: ${self:service} ${self:provider.stage} Allow Key usage to Lambda Execution Role
             Effect: Allow
             Principal:
               AWS:
@@ -51,22 +54,7 @@ resources:
               - kms:GenerateDataKey*
               - kms:DescribeKey
             Resource: '*'
-# TODO: If you need to access secrets stored in SecretsBucket from within your buildspec.yml, you need to allow the CodeBuild app role access to KMS
-# TODO: If you only need to use secrets at runtime, allowing the Lambda Execution Role to have access is enough
-#          - Sid: ${env:PIPELINE} ${env:STAGE} Allow CodeBuild app role usage to Lambda Execution Role
-#            Effect: Allow
-#            Principal:
-#              AWS:
-#                Fn::ImportValue: codebuild-arn-${self:service}-app
-#            Action:
-#              - kms:Encrypt
-#              - kms:Decrypt
-#              - kms:ReEncrypt*
-#              - kms:GenerateDataKey*
-#              - kms:DescribeKey
-#            Resource: '*'
 
-    # DO NOT MODIFY!!!
     SecretsBucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -76,19 +64,21 @@ resources:
           DestinationBucketName:
             Fn::ImportValue:
               AppSecretLoggingBucket
-          LogFilePrefix: logs-${self:service}-${opt:stage, env:STAGE}
+          LogFilePrefix: logs-${self:service}-${self:provider.stage}
 
-    # DO NOT MODIFY!!!
     SecretsBucketPolicy:
       Type: AWS::S3::BucketPolicy
-      DependsOn: Role
+      DependsOn:
+      - AppKey
+      - Role
+      - KeyUploadGroup
       Properties:
         Bucket:
           Ref: SecretsBucket
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Sid: Allow admins to upload encrypted secrets using stack key
+          - Sid: Allow root to upload encrypted secrets using stack key
             Action:
             - s3:PutObject
             Effect: Allow
@@ -98,7 +88,7 @@ resources:
                   - ''
                   - - 'arn:aws:iam::'
                     - Ref: AWS::AccountId
-                    - ':role/AdminRole'
+                    - ':root'
             Resource:
               Fn::Join:
                 - ''
@@ -143,24 +133,38 @@ resources:
             Condition:
                Bool:
                  aws:SecureTransport: true
-# TODO: If you need to access secrets stored in SecretsBucket from within your buildspec.yml, you need to allow the CodeBuild app role access to KMS
-# TODO: If you only need to use secrets at runtime, allowing the Lambda Execution Role to have access is enough
-#          - Sid: Allow CodeBuild app execution role to download and decrypt secrets
-#            Effect: Allow
-#            Action:
-#            - s3:GetObject
-#            Principal:
-#              AWS:
-#                Fn::ImportValue: codebuild-arn-${self:service}-app
-#            Resource:
-#              Fn::Join:
-#                - ''
-#                - - 'arn:aws:s3:::'
-#                  - Ref: SecretsBucket
-#                  - '/*'
-#            Condition:
-#               Bool:
-#                 aws:SecureTransport: true
+
+    ManagedKeyPolicy:
+      Type: AWS::IAM::ManagedPolicy
+      Properties:
+        Groups:
+          - Ref: KeyUploadGroup
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            -
+              Effect: Allow
+              Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+              Resource:
+                Fn::GetAtt: [ AppKey, Arn ]
+            -
+              Effect: Allow
+              Action:
+              - s3:PutObject
+              Resource:
+                Fn::Join:
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - Ref: SecretsBucket
+                    - '/*'
+
+    KeyUploadGroup:
+      Type: AWS::IAM::Group
 
     Role:
       Type: AWS::IAM::Role
@@ -174,13 +178,29 @@ resources:
                   - lambda.amazonaws.com
               Action:
                 - sts:AssumeRole
-        Path: "/"
+        Path: '/'
         Policies:
-          - PolicyName: ${env:PIPELINE}-security-${opt:stage, env:STAGE}
+          - PolicyName: ${self:service}-${self:provider.stage}
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
-                # DO NOT MODIFY!!! this set of permissions is needed for the Lambda Functions to log to Cloudwatch Logs
+                - Effect: Allow
+                  Action:
+                    - dynamodb:GetItem
+                    - dynamodb:PutItem
+                    - dynamodb:UpdateItem
+                    - dynamodb:DeleteItem
+                  Resource:
+                    Fn::Join:
+                    - ''
+                    - - 'arn:aws:dynamodb:'
+                      - Ref: AWS::Region
+                      - ':'
+                      - Ref: AWS::AccountId
+                      - ':table/'
+                      - ${env:SERVICE}
+                      - '-'
+                      - ${self:provider.stage}
                 - Effect: Allow
                   Action:
                     - logs:CreateLogGroup
@@ -192,45 +212,30 @@ resources:
                       - - 'arn:aws:logs:'
                         - Ref: AWS::Region
                         - ':*:*'
-                # TODO: If needed, add IAM Policies to the Lambda Function Roles
-                # NOTE: Only add the minimum permissions necessary
-                # EXAMPLE: This example gives the Lambda Functions access to a DynamoDB table
-                # - Effect: Allow
-                #   Action:
-                #     - dynamodb:GetItem
-                #     - dynamodb:PutItem
-                #     - dynamodb:UpdateItem
-                #     - dynamodb:DeleteItem
-                #   Resource:
-                #     Fn::Join:
-                #     - ''
-                #     - - 'arn:aws:dynamodb:'
-                #       - Ref: AWS::Region
-                #       - ":"
-                #       - Ref: AWS::AccountId
-                #       - ":table/"
-                #       - ${env:PIPELINE}
-                #       - "-"
-                #       - ${opt:stage, env:STAGE}
 
-  # DO NOT MODIFY!!!
   Outputs:
     SecretsBucket:
-      Description: Bucket to store secrets for ${self:service}-${opt:stage, env:STAGE}
+      Description: Bucket to store secrets for ${self:service}-${self:provider.stage}
       Value:
         Ref: SecretsBucket
       Export:
-        Name: ${self:service}-secrets-${opt:stage, env:STAGE}
+        Name: ${self:service}-secrets-${self:provider.stage}
     KmsKeyId:
-      Description: Stage ${opt:stage, env:STAGE} KMS Key Id
+      Description: Stage ${self:provider.stage} KMS Key Id
       Value:
         Ref: AppKey
-    lambdaRoleARN:
-      Description: Stage ${opt:stage, env:STAGE} IAM Role ARN
+    RoleARN:
+      Description: Stage ${self:provider.stage} IAM Role ARN
       Value:
         Fn::GetAtt:
           - Role
           - Arn
       Export:
-        Name: ${self:service}-${opt:stage, env:STAGE}
+        Name: ${self:service}-${self:provider.stage}
+    KeyUploadGroupARN:
+      Description: Group ARN for key uploaders
+      Value:
+        Fn::GetAtt:
+          - KeyUploadGroup
+          - Arn
 
